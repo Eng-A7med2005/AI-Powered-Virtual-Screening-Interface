@@ -3,7 +3,7 @@
 
 A user-friendly web application for AI-driven virtual screening of chemical compounds. Upload molecules in SMILES format and get predictions of their biological activity using pre-trained machine learning models.
 
-![App Screenshot]![image](https://github.com/user-attachments/assets/c5ac12b5-2d26-42d8-ad46-2b2afc20f2b2)
+![Screenshot 2025-06-09 210441](https://github.com/user-attachments/assets/709fda92-4b32-4575-931c-218222964e23)
 
 
 
