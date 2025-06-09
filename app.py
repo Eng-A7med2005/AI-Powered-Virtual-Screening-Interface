@@ -475,9 +475,11 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-image: url("https://images.unsplash.com/photo-1581093588401-4c8a13dfd7b4");
+        background-image: url("https://images.unsplash.com/photo-1581093588401-4c8a13dfd7b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80");
         background-size: cover;
         background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-position: center;
     }
     </style>
     """,
