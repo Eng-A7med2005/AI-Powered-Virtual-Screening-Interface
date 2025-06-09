@@ -28,7 +28,7 @@ from sklearn.manifold import TSNE
 from rdkit import Chem
 from rdkit.Chem import AllChem, Draw, Descriptors, Lipinski, MolToSmiles
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from rdkit.Chem.Draw import rdMolDraw2D
+
 
 # Tensorflow for Keras model
 try:
