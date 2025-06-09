@@ -1,41 +1,25 @@
-# ==============================
-# Core Web Framework
-# ==============================
-streamlit==1.35.0
-
-# ==============================
-# Data Science and Machine Learning
-# ==============================
-pandas==2.2.2
+# Core ML and Data Science
 numpy==1.26.4
+pandas==2.2.2
 scikit-learn==1.4.2
 joblib==1.4.2
 
-# ==============================
 # Deep Learning
-# ⚠️ استخدم Python 3.11 فقط
-# ==============================
 tensorflow==2.18.0
+keras==3.8.0
 
-# ==============================
-# Chemistry and Molecular Processing
-# ==============================
-rdkit-pypi==2022.9.5
+# Chemistry and Molecular Analysis
+rdkit==2025.3.2
 
-# ==============================
-# Visualization
-# ==============================
+# Data Visualization
 matplotlib==3.8.3
 seaborn==0.13.2
 
-# ==============================
 # PDF Generation
-# ==============================
 fpdf2==2.8.3
-# Optional Backup PDF Library
-# reportlab==4.0.4
 
-# ==============================
-# Image Processing
-# ==============================
-Pillow==10.2.0
+# Streamlit Web Framework
+streamlit==1.35.0
+
+# Additional dependencies that might be needed
+pillow==10.2.0
