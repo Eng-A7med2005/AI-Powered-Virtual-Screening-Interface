@@ -1,5 +1,5 @@
 # Core Streamlit and Web Framework
-streamlit>=1.28.0
+
 # Data Science and Machine Learning
 pandas>=1.5.0
 numpy>=1.24.0
