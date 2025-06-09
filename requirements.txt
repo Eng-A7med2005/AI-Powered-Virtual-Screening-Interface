@@ -1,22 +1,11 @@
-# Core ML and Data Science
 numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.4.2
 joblib==1.4.2
-
-# Deep Learning
 tensorflow==2.18.0
 keras==3.8.0
-
-# Chemistry and Molecular Analysis
 rdkit==2025.3.2
-
-# Data Visualization
 matplotlib==3.8.3
 seaborn==0.13.2
-
-# PDF Generation
 fpdf2==2.8.3
-
-# Web Framework
 streamlit==1.35.0
