@@ -11,6 +11,11 @@ from pathlib import Path
 import os
 import warnings
 
+
+from math import ceil
+from PIL import Image            # ⬅ ضروري لحساب أبعاد الصورة
+
+
 # Suppress some warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -278,11 +283,22 @@ def create_all_visualisations(df: pd.DataFrame, fps_array: np.ndarray):
     # 5. Molecule Grid Image
     mols = df['mol'].tolist()
     legends = [f"{row['Compound']} ({row['Activity (%)']:.1f}%)" for index, row in df.iterrows()]
-    # Adjust columns based on N
     mols_per_row = 5 if n_compounds > 15 else (4 if n_compounds > 8 else 3)
-    mol_grid_buf = mol_grid_to_buf(mols, legends, molsPerRow=mols_per_row)
-    if mol_grid_buf:
-         images.append((f"5. Structures - Top {n_compounds} Compounds", mol_grid_buf))
+
+    # عدد الصور المطلوبة
+    chunk_size = 40
+    total_chunks = ceil(len(mols) / chunk_size)
+
+    for i in range(total_chunks):
+        start = i * chunk_size
+        end = start + chunk_size
+        mols_chunk = mols[start:end]
+        legends_chunk = legends[start:end]
+
+        mol_grid_buf = mol_grid_to_buf(mols_chunk, legends_chunk, molsPerRow=mols_per_row)
+        
+        if mol_grid_buf:
+            images.append((f"5. Structures - Compounds {start + 1} to {min(end, len(mols))}", mol_grid_buf))
 
     # 6. Violin plots for key properties by activity (binarize activity for visualization)
     if n_compounds > 5:
@@ -339,23 +355,18 @@ def create_all_visualisations(df: pd.DataFrame, fps_array: np.ndarray):
 
 def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
     """Assemble PDF with visualisations and molecule pages."""
-    pdf = PDF(format="A4", unit="pt") # Use our custom class
-    try:
-        pdf.alias_nb_pages() # For page numbering (may not be available in older versions)
-    except:
-        pass
+    pdf = PDF(format="A4", unit="pt")
     pdf.set_auto_page_break(True, margin=40)
+
+    # ---- Title page ----
     pdf.add_page()
-    
-    # --- Title Page Content ---
-    pdf.ln(50)
     pdf.set_font("Arial", "B", 24)
+    pdf.ln(50)
     pdf.multi_cell(0, 30, "Virtual Screening\nAnalysis Report", 0, 'C')
     pdf.ln(20)
     pdf.set_font("Arial", "", 12)
     pdf.cell(0, 15, f"Number of compounds analyzed: {len(df)}", 0, 1, 'C')
     pdf.cell(0, 15, f"Model Type Used: {MODEL_TYPE_NAME}", 0, 1, 'C')
-     # Add brief summary stats
     pdf.ln(20)
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 20, "Summary Statistics", 0, 1, 'L')
@@ -365,76 +376,85 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
     pdf.cell(0, 15, f" - Avg. LogP: {df['LogP'].mean():.2f}", 0, 1, 'L')
     pdf.cell(0, 15, f" - Compounds passing Rule-of-5: {df['Drug_Like'].sum()} / {len(df)}", 0, 1, 'L')
 
-    # --- Add all visualisations on separate pages ---
+    # ---- Visualisation pages (كل 40 جزيء في صفحة) ----
+    side_margin = 40                       # يطابق الهامش التلقائي
     for title, img_buf in viz_list:
-        pdf.chapter_title(title)
-        # Determine appropriate width for image type
-        img_width = 500 if "Structures" not in title else 480 
-        pdf.add_image_centered(img_buf, img_width_pt=img_width)
+        pdf.add_page()  # صفحة جديدة لكل صورة
 
-    # --- Add individual molecule pages ---
-    # pdf.chapter_title("Individual Compound Details") # Optional title page
+        # بدلاً من pdf.chapter_title(title)
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 20, title, ln=1)
+
+        # المساحة المتاحة بعد العنوان
+        y_start = pdf.get_y()
+        max_height = pdf.h - y_start - side_margin
+        max_width  = pdf.w - 2 * side_margin
+
+        # تحميل أبعاد الصورة
+        img_buf.seek(0)
+        img_w_px, img_h_px = Image.open(img_buf).size
+        img_w_pt = img_w_px * 72 / 96
+        img_h_pt = img_h_px * 72 / 96
+
+        scale = min(max_width / img_w_pt, max_height / img_h_pt, 1.0)
+        new_w = img_w_pt * scale
+        new_h = img_h_pt * scale
+        x_pos = (pdf.w - new_w) / 2
+
+        img_buf.seek(0)
+        pdf.image(img_buf, x=x_pos, y=y_start, w=new_w, h=new_h)
+
+    # ---- Individual molecule pages ----
     for i, row in df.iterrows():
-       pdf.add_page()
-       pdf.set_font("Arial", "B", 16)
-       pdf.cell(0, 25, f"{row['Compound']} (Rank: {row['rank']})", ln=1)
-       pdf.set_font("Arial", "", 10)
-       pdf.multi_cell(0, 14, f"SMILES: {row['smiles']}", ln=1, border=0)
-       pdf.ln(5)
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 25, f"{row['Compound']} (Rank: {row['rank']})", ln=1)
+        pdf.set_font("Arial", "", 10)
+        pdf.multi_cell(0, 14, f"SMILES: {row['smiles']}", ln=1)
+        pdf.ln(5)
 
-       # Add Image
-       try:
-          mol_img = Draw.MolToImage(row["mol"], size=(280, 280))
-          m_buf = BytesIO()
-          mol_img.save(m_buf, format="PNG")
-          m_buf.seek(0)
-          pdf.image(m_buf, x=40, y=pdf.get_y(), w=280, h=280)
-       except:
+        # رسم الجزيء
+        try:
+            mol_img = Draw.MolToImage(row["mol"], size=(280, 280))
+            m_buf = BytesIO()
+            mol_img.save(m_buf, format="PNG")
+            m_buf.seek(0)
+            pdf.image(m_buf, x=40, y=pdf.get_y(), w=280, h=280)
+        except Exception:
             pdf.cell(100, 50, "Image Error", border=1)
 
-       # Add Properties Table-like
-       pdf.set_font("Arial", "B", 11)
-       # Position text to the right of the image
-       prop_start_x = 340 
-       prop_start_y = pdf.get_y() #+ 20
-       pdf.set_xy(prop_start_x, prop_start_y)
-       pdf.cell(0, 18, "Properties:", ln=1)
-       
-       pdf.set_font("Arial", "", 10)
-       prop_data = {
-           "Activity (%)": f"{row['Activity (%)']:.2f}",
-           "MW": f"{row['MW']:.2f}",
-           "LogP": f"{row['LogP']:.2f}",
-           "PSA": f"{row['PSA']:.2f}",
-           "HBD / HBA": f"{int(row['HBD'])} / {int(row['HBA'])}",
-           "Rot. Bonds": f"{int(row['Rotatable_Bonds'])}",
-           "Drug-Like (RO5)": "Yes" if row['Drug_Like'] else "No"
-       }
-       for key, val in prop_data.items():
-           pdf.set_x(prop_start_x)
-           pdf.cell(80, 15, key, border=1)
-           pdf.cell(70, 15, str(val), border=1, ln=1)
-       # pdf.ln(10) # spacer
+        # خصائص الجزيء
+        pdf.set_font("Arial", "B", 11)
+        prop_x = 340
+        prop_y = pdf.get_y()
+        pdf.set_xy(prop_x, prop_y)
+        pdf.cell(0, 18, "Properties:", ln=1)
+        pdf.set_font("Arial", "", 10)
+        props = {
+            "Activity (%)": f"{row['Activity (%)']:.2f}",
+            "MW": f"{row['MW']:.2f}",
+            "LogP": f"{row['LogP']:.2f}",
+            "PSA": f"{row['PSA']:.2f}",
+            "HBD / HBA": f"{int(row['HBD'])} / {int(row['HBA'])}",
+            "Rot. Bonds": f"{int(row['Rotatable_Bonds'])}",
+            "Drug-Like (RO5)": "Yes" if row['Drug_Like'] else "No"
+        }
+        for k, v in props.items():
+            pdf.set_x(prop_x)
+            pdf.cell(80, 15, k, border=1)
+            pdf.cell(70, 15, v, border=1, ln=1)
 
-    # CORRECTED: Proper way to get PDF bytes for fpdf2
+    # ---- إخراج الـ PDF كـ bytes ----
     try:
-        # For fpdf2 - use output() with appropriate parameters
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest="S").encode("latin-1")
     except Exception as e:
-        # Alternative approach - save to BytesIO buffer
-        try:
-            pdf_buffer = BytesIO()
-            pdf_bytes = pdf.output(dest='S')
-            if isinstance(pdf_bytes, str):
-                pdf_bytes = pdf_bytes.encode('latin-1')
-            pdf_buffer.write(pdf_bytes)
-            pdf_buffer.seek(0)
-            return pdf_buffer.getvalue()
-        except:
-            # Last resort - create a minimal PDF
-            st.error(f"PDF generation failed: {e}")
-            # Return empty bytes to prevent crash
-            return b""
+        pdf_buffer = BytesIO()
+        pdf_bytes = pdf.output(dest="S")
+        if isinstance(pdf_bytes, str):
+            pdf_bytes = pdf_bytes.encode("latin-1")
+        pdf_buffer.write(pdf_bytes)
+        pdf_buffer.seek(0)
+        return pdf_buffer.getvalue()
 
 ################################################################################
 # Streamlit UI
