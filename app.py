@@ -471,6 +471,19 @@ st.markdown(f"""
 *(Model Type: {MODEL_TYPE_NAME})*
 """)
 
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: url("https://images.unsplash.com/photo-1581093588401-4c8a13dfd7b4");
+        background-size: cover;
+        background-attachment: fixed;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # --- Sidebar ---
 with st.sidebar:
      st.header("Input Options")
