@@ -1,6 +1,4 @@
-Here's the improved and polished version of your README file with better organization, clearer instructions, and some enhancements:
 
-```markdown
 # 🧬 AI-Powered Virtual Screening Interface
 
 A user-friendly web application for AI-driven virtual screening of chemical compounds. Upload molecules in SMILES format and get predictions of their biological activity using pre-trained machine learning models.
