@@ -471,6 +471,29 @@ st.markdown(f"""
 *(Model Type: {MODEL_TYPE_NAME})*
 """)
 
+def set_background_with_fade(image_file):
+    with open(image_file, "rb") as image:
+        encoded = base64.b64encode(image.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+                        url("data:image/png;base64,{encoded}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# استدعِ الدالة مع اسم الصورة
+set_background_with_fade(r"Chemistry Wallpaper.jpg")  
+
 st.markdown(
     """
     <style>
