@@ -487,7 +487,7 @@ with col1:
     N_slider = st.slider(
         "🔢 Number of Top Compounds for Report (Top-N)", 
         min_value=1, 
-        max_value=100, 
+        max_value=500, 
         value=10,
         help="Choose the number of compounds with highest predicted activity scores"
     )
@@ -497,7 +497,7 @@ with col2:
     N_number = st.number_input(
         "Exact Number",
         min_value=1,
-        max_value=100,
+        max_value=500,
         value=N_slider,  # ربط بقيمة الـ slider
         step=1
     )
