@@ -28,7 +28,7 @@ from sklearn.manifold import TSNE
 from rdkit import Chem
 from rdkit.Chem import AllChem, Draw, Descriptors, Lipinski, MolToSmiles
 from rdkit.Chem.Scaffolds import MurckoScaffold
-
+from rdkit.Chem.Draw import rdMolDraw2D
 
 # Tensorflow for Keras model
 try:
@@ -222,7 +222,8 @@ def create_all_visualisations(df: pd.DataFrame, fps_array: np.ndarray):
 
     # 2. Chemical Space (MW vs LogP)
     fig2, ax2 = plt.subplots(figsize=(8, 6))
-    scatter = sns.scatterplot(data=df, x='MW', y='LogP', hue='Activity (%)', size='Activity (%)', palette='viridis', sizes=(50, 300), ax=ax2, legend='brief')
+    scatter = sns.scatterplot(data=df, x='MW', y='LogP', hue='Activity (%)', size='Activity (%)', 
+                             palette='viridis', sizes=(50, 300), ax=ax2, legend='brief')
     plt.title(f'Chemical Space (MW vs LogP) - Top {n_compounds}')
     plt.xlabel('Molecular Weight')
     plt.ylabel('LogP')
@@ -255,6 +256,17 @@ def create_all_visualisations(df: pd.DataFrame, fps_array: np.ndarray):
                 fig4, ax4 = plt.subplots(figsize=(8, 6))
                 scatter = ax4.scatter(embedding[:, 0], embedding[:, 1], c=df['Activity (%)'], cmap='viridis', alpha=0.8)
                 plt.colorbar(scatter, label='Predicted Activity (%)')
+                
+                # Highlight top 5 compounds if we have enough
+                if n_compounds >= 10:
+                    top_n_to_highlight = min(5, n_compounds)
+                    top_n_indices = df.head(top_n_to_highlight).index
+                    ax4.scatter(embedding[df.index.isin(top_n_indices), 0],
+                                embedding[df.index.isin(top_n_indices), 1],
+                                facecolors='none', edgecolors='red', s=200, 
+                                linewidth=2, label=f'Top {top_n_to_highlight} Hits')
+                    ax4.legend()
+                
                 plt.title(f'Chemical Space (t-SNE) - Top {n_compounds}')
                 plt.xlabel("t-SNE Dimension 1")
                 plt.ylabel("t-SNE Dimension 2")
@@ -271,6 +283,56 @@ def create_all_visualisations(df: pd.DataFrame, fps_array: np.ndarray):
     mol_grid_buf = mol_grid_to_buf(mols, legends, molsPerRow=mols_per_row)
     if mol_grid_buf:
          images.append((f"5. Structures - Top {n_compounds} Compounds", mol_grid_buf))
+
+    # 6. Violin plots for key properties by activity (binarize activity for visualization)
+    if n_compounds > 5:
+        # Create a binarized activity column for visualization
+        df_viz = df.copy()
+        median_activity = df_viz['Activity (%)'].median()
+        df_viz['Activity_Group'] = df_viz['Activity (%)'].apply(lambda x: 'High' if x >= median_activity else 'Low')
+        
+        # Violin plot for Molecular Weight
+        fig6, ax6 = plt.subplots(figsize=(8, 6))
+        sns.violinplot(x='Activity_Group', y='MW', data=df_viz, hue='Activity_Group', 
+                      split=True, legend=False, palette='viridis')
+        plt.title('Molecular Weight Distribution by Activity Group', fontsize=14)
+        plt.xticks([0, 1], ['Low Activity', 'High Activity'], rotation=0)
+        plt.ylabel('Molecular Weight', fontsize=12)
+        plt.xlabel('Activity Group', fontsize=12)
+        plt.tight_layout()
+        images.append((f"6. MW Distribution by Activity - Top {n_compounds}", fig_to_buf(fig6)))
+
+        # Box plot for LogP
+        fig7, ax7 = plt.subplots(figsize=(8, 6))
+        sns.boxplot(x='Activity_Group', y='LogP', data=df_viz, hue='Activity_Group', 
+                   palette='Set2', legend=False)
+        plt.title('LogP Distribution by Activity Group', fontsize=14)
+        plt.xticks([0, 1], ['Low Activity', 'High Activity'], rotation=0)
+        plt.ylabel('LogP', fontsize=12)
+        plt.xlabel('Activity Group', fontsize=12)
+        plt.tight_layout()
+        images.append((f"7. LogP Distribution by Activity - Top {n_compounds}", fig_to_buf(fig7)))
+
+    # 7. Pair plot for top compounds (only if reasonable number)
+    
+    # 8. Correlation heatmap
+    fig9, ax9 = plt.subplots(figsize=(8, 6))
+    corr = df[['MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rotatable_Bonds', 'Activity (%)']].corr()
+    sns.heatmap(corr, annot=True, fmt=".2f", cmap='coolwarm', square=True, 
+               cbar_kws={"shrink": .6}, ax=ax9)
+    plt.title('Property Correlation Matrix', fontsize=14)
+    plt.tight_layout()
+    images.append((f"9. Property Correlations - Top {n_compounds}", fig_to_buf(fig9)))
+
+    # 9. Scatter plot with regression line for key properties
+    fig10, ax10 = plt.subplots(figsize=(8, 6))
+    sns.regplot(x='MW', y='LogP', data=df, scatter_kws={'alpha': 0.6, 'color': 'blue'}, 
+               line_kws={'color': 'red'}, ax=ax10)
+    plt.title('MW vs LogP with Regression Line', fontsize=14)
+    plt.xlabel('Molecular Weight', fontsize=12)
+    plt.ylabel('LogP', fontsize=12)
+    plt.tight_layout()
+    images.append((f"10. MW vs LogP Regression - Top {n_compounds}", fig_to_buf(fig10)))
 
     return images
 
@@ -393,11 +455,35 @@ st.markdown(f"""
 with st.sidebar:
      st.header("Input Options")
      file = st.file_uploader("📄 Upload CSV File", type="csv")
-     N = st.slider("🔢 Number of Top Compounds for Report (Top-N)", 10, 50, 10, help="Choose the number of compounds with highest predicted activity scores")
+     
      run = st.button("🚀 Start Prediction & Screening", disabled=file is None, type="primary")
      st.divider()
      st.info(f"Fingerprint: Morgan (R={FP_RADIUS}, Bits={FP_BITS})\n\nSelector & Model loaded from: '{MODEL_DIR}'")
 
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    # الـ slider
+    N_slider = st.slider(
+        "🔢 Number of Top Compounds for Report (Top-N)", 
+        min_value=1, 
+        max_value=100, 
+        value=10,
+        help="Choose the number of compounds with highest predicted activity scores"
+    )
+
+with col2:
+    # الـ number input - سيتأثر بقيمة الـ slider
+    N_number = st.number_input(
+        "Exact Number",
+        min_value=1,
+        max_value=100,
+        value=N_slider,  # ربط بقيمة الـ slider
+        step=1
+    )
+
+# استخدام القيمة من الـ number input (التي تتضمن تأثير الـ slider)
+N = N_number
 # --- Main Logic ---
 if run and file is not None:
     # Use session state to keep results after run
