@@ -11,6 +11,7 @@ from pathlib import Path
 import os
 import warnings
 
+import base64
 
 from math import ceil
 from PIL import Image            # ⬅ ضروري لحساب أبعاد الصورة
