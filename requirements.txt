@@ -1,28 +1,41 @@
-# Core Streamlit and Web Framework
-streamlit>=1.28.0
+# ==============================
+# Core Web Framework
+# ==============================
+streamlit==1.28.2
 
+# ==============================
 # Data Science and Machine Learning
-pandas>=1.5.0
-numpy>=1.24.0
-scikit-learn>=1.4.2
-joblib>=1.4.2
+# ==============================
+pandas==1.5.3
+numpy==1.24.4
+scikit-learn==1.3.2
+joblib==1.3.2
 
-# Deep Learning (Optional - for Keras models)
-# Note: TensorFlow doesn't support Python 3.13 yet, use 3.11 or 3.12
-tensorflow>=2.15.0,<2.19.0
+# ==============================
+# Deep Learning (Optional)
+# ⚠️ استخدم Python 3.11 فقط
+# ==============================
+tensorflow==2.15.0
 
+# ==============================
 # Chemistry and Molecular Processing
-rdkit-pypi>=2022.9.5
+# ==============================
+rdkit-pypi==2022.9.5
 
+# ==============================
 # Visualization
-matplotlib>=3.8.3
-seaborn>=0.13.2
+# ==============================
+matplotlib==3.8.3
+seaborn==0.13.2
 
+# ==============================
 # PDF Generation
-fpdf2>=2.8.3
+# ==============================
+fpdf2==2.8.3
+# Optional Backup PDF Library
+# reportlab==4.0.4
 
-# Additional utilities
-Pillow>=10.2.0
-
-# Optional: Alternative PDF library (backup)
-# reportlab>=4.0.0
+# ==============================
+# Image Processing
+# ==============================
+Pillow==10.2.0
