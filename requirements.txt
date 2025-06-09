@@ -18,8 +18,5 @@ seaborn==0.13.2
 # PDF Generation
 fpdf2==2.8.3
 
-# Streamlit Web Framework
+# Web Framework
 streamlit==1.35.0
-
-# Additional dependencies that might be needed
-pillow==10.2.0
