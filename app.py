@@ -432,7 +432,7 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
         pdf.cell(0, 18, "Properties:", ln=1)
         pdf.set_font("Arial", "", 10)
         props = {
-            "Activity (%)": f"{row['Activity (%)']:.2f}",
+            "Activity (%)": f"{row['Activity (%)']*100:.2f}",
             "MW": f"{row['MW']:.2f}",
             "LogP": f"{row['LogP']:.2f}",
             "PSA": f"{row['PSA']:.2f}",
