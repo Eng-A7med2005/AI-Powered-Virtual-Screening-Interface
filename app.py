@@ -372,7 +372,7 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 20, "Summary Statistics", 0, 1, 'L')
     pdf.set_font("Arial", "", 11)
-    pdf.cell(0, 15, f" - Avg. Predicted Activity: {df['Activity (%)'].mean():.2f}%", 0, 1, 'L')
+    pdf.cell(0, 15, f" - Avg. Predicted Activity: {df['Activity (%)'].mean()*100:.2f}%", 0, 1, 'L')
     pdf.cell(0, 15, f" - Avg. Molecular Weight: {df['MW'].mean():.2f}", 0, 1, 'L')
     pdf.cell(0, 15, f" - Avg. LogP: {df['LogP'].mean():.2f}", 0, 1, 'L')
     pdf.cell(0, 15, f" - Compounds passing Rule-of-5: {df['Drug_Like'].sum()} / {len(df)}", 0, 1, 'L')
