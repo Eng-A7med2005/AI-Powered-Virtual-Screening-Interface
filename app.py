@@ -3,7 +3,7 @@ from __future__ import annotations
 
 # IMPORTANT: st.set_page_config() must be the FIRST Streamlit command
 import streamlit as st
-st.set_page_config(page_title="SmartVEGFR", layout="wide", page_icon="🧬")
+st.set_page_config(page_title="SmartVEGFR", layout="wide", page_icon="LOGO.jpeg")
 
 import base64
 from io import BytesIO
