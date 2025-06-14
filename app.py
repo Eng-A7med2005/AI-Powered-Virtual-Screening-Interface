@@ -3,7 +3,7 @@ from __future__ import annotations
 
 # IMPORTANT: st.set_page_config() must be the FIRST Streamlit command
 import streamlit as st
-st.set_page_config(page_title="AI Virtual Screening", layout="wide", page_icon="🧬")
+st.set_page_config(page_title="SmartVEGFR", layout="wide", page_icon="🧬")
 
 import base64
 from io import BytesIO
@@ -14,7 +14,7 @@ import warnings
 import base64
 
 from math import ceil
-from PIL import Image            # ⬅ ضروري لحساب أبعاد الصورة
+from PIL import Image     
 
 
 # Suppress some warnings
@@ -460,18 +460,6 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
 ################################################################################
 # Streamlit UI
 ################################################################################
-
-st.title("🧬 SmartVEGFR")
-
-st.markdown(f"""
-**Steps:**
-1.  Upload a CSV file containing one column named `smiles`.
-2.  Choose the number of top compounds (10-50) to display in the report.
-3.  Click **"🚀 Start Prediction & Screening"**.
-4.  Download results as CSV file and comprehensive PDF report.
-*(Model Type: {MODEL_TYPE_NAME})*
-""")
-
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
@@ -490,150 +478,267 @@ def set_background_with_fade(image_file):
         """,
         unsafe_allow_html=True
     )
-
-
-# استدعِ الدالة مع اسم الصورة
-set_background_with_fade("Chemistry Wallpaper.jpg")  
-# --- Sidebar ---
-with st.sidebar:
-     st.header("Input Options")
-     file = st.file_uploader("📄 Upload CSV File", type="csv")
-     
-     run = st.button("🚀 Start Prediction & Screening", disabled=file is None, type="primary")
-     st.divider()
-     st.info(f"Fingerprint: Morgan (R={FP_RADIUS}, Bits={FP_BITS})\n\nSelector & Model loaded from: '{MODEL_DIR}'")
-
-col1, col2 = st.columns([3, 1])
-
-with col1:
-    # الـ slider
-    N_slider = st.slider(
-        "🔢 Number of Top Compounds for Report (Top-N)", 
-        min_value=1, 
-        max_value=500, 
-        value=10,
-        help="Choose the number of compounds with highest predicted activity scores"
-    )
-
-with col2:
-    # الـ number input - سيتأثر بقيمة الـ slider
-    N_number = st.number_input(
-        "Exact Number",
-        min_value=1,
-        max_value=500,
-        value=N_slider,  # ربط بقيمة الـ slider
-        step=1
-    )
-
-# استخدام القيمة من الـ number input (التي تتضمن تأثير الـ slider)
-N = N_number
-# --- Main Logic ---
-if run and file is not None:
-    # Use session state to keep results after run
-    st.session_state.run_pressed = True 
-    with st.spinner("Reading file and processing compounds..."):
-        try:
-           df_raw = pd.read_csv(file)
-        except Exception as e:
-            st.error(f"Error reading file: {e}")
-            st.stop()
-            
-        if "smiles" not in df_raw.columns:
-            st.error("❌ Error: CSV file must contain a column named 'smiles'.")
-            st.stop()
-        if df_raw.empty:
-             st.error("❌ Error: CSV file is empty.")
-             st.stop()
-             
-        # Clean and process
-        smiles_series = df_raw["smiles"].dropna().drop_duplicates()
-        st.toast(f"Found {len(smiles_series)} unique SMILES")
-        X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
-
-        if X_raw is None:
-            st.error("❌ No valid SMILES compounds found in the file.")
-            st.stop()
+# إضافة صفحة الترحيب في بداية الكود
+def show_welcome_page():
+    """عرض صفحة الترحيب"""
     
-    with st.spinner("Applying feature selection and making predictions..."):
-        # Apply selector and predict
-        try:
-           X_sel = SELECTOR.transform(X_raw)
-           if hasattr(MODEL, 'predict_proba'): # Scikit-learn
-              probs = MODEL.predict_proba(X_sel)[:, 1]
-           else: # Keras / other
-              probs = MODEL.predict(X_sel).ravel() # .ravel() flattens keras output
-              
-        except Exception as e:
-             st.error(f"An error occurred during prediction or feature selection: {e}")
-             st.stop()
-
-        # Create full results DataFrame
-        results = pd.DataFrame({
-            "smiles": valid_smiles,
-            "probability": probs,
-            "Activity (%)": probs * 100,
-            "mol": mols_list,
-             "fp_raw": list(X_raw) # keep raw FP for t-SNE
-             })
-        results = pd.concat([results.reset_index(drop=True), properties_df.reset_index(drop=True)], axis=1)
-        
-        # Sort and select Top N
-        top_df = results.sort_values("probability", ascending=False).head(N).reset_index(drop=True)
-        top_df['rank'] = top_df['probability'].rank(ascending=False, method='min').astype(int)
-        top_df['Compound'] = [f'cpd_{i+1}' for i in range(len(top_df))]
-        
-        # Store in session state
-        st.session_state.top_df = top_df
-        st.session_state.fps_array_topN = np.array(top_df['fp_raw'].tolist())
-        st.session_state.N = N
-
-    st.success(f"✅ Processing completed. Report prepared for top {N} compounds.")
-
-# --- Display Results if available in session state ---
-if 'top_df' in st.session_state:
-    top_df = st.session_state.top_df
-    fps_array_topN = st.session_state.fps_array_topN
-    N_results = len(top_df) # Actual number retrieved
-
-    st.header(f"📊 Results for Top {N_results} Compounds")
-    # Define columns for display & CSV
-    display_cols = ['rank','Compound','smiles', 'Activity (%)', 'MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rotatable_Bonds', 'Drug_Like']
-    st.dataframe(top_df[display_cols].round(3), height=400, use_container_width=True)
-
-    # --- Generate Visuals and PDF ---
-    with st.spinner("Generating charts and PDF report..."):
-        viz_list = create_all_visualisations(top_df, fps_array_topN)
-        pdf_bytes = build_pdf(top_df, viz_list)
-    st.toast("PDF and Visuals Ready!")
-
-    # --- Download Buttons ---
-    col1, col2 = st.columns(2)
-    with col1:
-      st.download_button(
-        "⬇️ Download Results (CSV)",
-        data=top_df[display_cols].to_csv(index=False).encode('utf-8'),
-        file_name=f"top_{N_results}_compounds.csv",
-        mime="text/csv",
-        use_container_width=True
-      )
+    # تطبيق خلفية مشابهة للصفحة الرئيسية
+    set_background_with_fade("Chemistry Wallpaper.jpg")
+    
+    # العنوان الرئيسي
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem 0;">
+        <h1 style="color: #00D4AA; font-size: 4rem; font-weight: bold; margin-bottom: 1rem;">
+            🧬 SmartVEGFR
+        </h1>
+        <h2 style="color: #ffffff; font-size: 1.8rem; font-weight: 300; margin-bottom: 2rem;">
+            Advanced VEGFR Inhibitor Screening Platform
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # معلومات التطبيق
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
     with col2:
-       st.download_button(
-        "⬇️ Download Comprehensive Report (PDF)",
-        data=pdf_bytes,
-        file_name=f"screening_report_top_{N_results}.pdf",
-        mime="application/pdf",
-         use_container_width=True
-       )
+        st.markdown("""
+        <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); 
+                    border-radius: 20px; padding: 2rem; margin: 2rem 0; 
+                    border: 1px solid rgba(255,255,255,0.2);">
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        ### 🎯 About SmartVEGFR
+        
+        **SmartVEGFR** is an advanced machine learning platform designed for screening and predicting 
+        VEGFR (Vascular Endothelial Growth Factor Receptor) inhibitor activity of chemical compounds.
+        
+        ### ✨ Key Features:
+        
+        🔬 **AI-Powered Predictions**: Uses advanced machine learning models to predict VEGFR inhibitor activity
+        
+        📊 **Comprehensive Analysis**: Provides detailed molecular properties and drug-likeness assessment
+        
+        📈 **Visual Reports**: Generates interactive charts and comprehensive PDF reports
+        
+        🧪 **Chemical Screening**: Efficiently screens large compound libraries for potential drug candidates
+        
+        ### 🚀 How It Works:
+        
+        1. **Upload** your compound library (CSV file with SMILES)
+        2. **Select** the number of top compounds for analysis
+        3. **Analyze** compounds using our trained ML models
+        4. **Download** results and comprehensive reports
+        
+        ### 📋 Technical Details:
+        
+        - **Molecular Fingerprints**: Morgan fingerprints for compound representation
+        - **Feature Selection**: Optimized feature selection for enhanced prediction accuracy
+        - **Molecular Properties**: MW, LogP, PSA, HBD, HBA, Rotatable Bonds, Drug-likeness
+        - **Visualization**: t-SNE plots, activity distributions, and molecular property analysis
+        """)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # زر البدء
+        st.markdown("<div style='text-align: center; margin: 3rem 0;'>", unsafe_allow_html=True)
+        
+        if st.button("🚀 Start SmartVEGFR Analysis", 
+                    type="primary", 
+                    use_container_width=True,
+                    help="Click to access the main application"):
+            st.session_state.show_main_app = True
+            st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # معلومات إضافية
+        st.markdown("""
+        <div style="background: rgba(0,212,170,0.1); border-radius: 10px; padding: 1rem; margin-top: 2rem;">
+            <p style="color: #00D4AA; text-align: center; margin: 0; font-size: 0.9rem;">
+                <strong>Note:</strong> This application uses pre-trained machine learning models. 
+                Results are for research purposes only.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+def show_main_app():
+    """عرض التطبيق الرئيسي"""
+    
+    st.title("🧬 SmartVEGFR")
+
+    st.markdown(f"""
+    **Steps:**
+    1.  Upload a CSV file containing one column named `smiles`.
+    2.  Choose the number of top compounds (10-50) to display in the report.
+    3.  Click **"🚀 Start Prediction & Screening"**.
+    4.  Download results as CSV file and comprehensive PDF report.
+    *(Model Type: {MODEL_TYPE_NAME})*
+    """)
+
+    # استدعِ الدالة مع اسم الصورة
+    set_background_with_fade("Chemistry Wallpaper.jpg")  
+    
+    # زر العودة للصفحة الرئيسية
+    if st.button("← Back to Welcome Page", help="Return to the welcome screen"):
+        st.session_state.show_main_app = False
+        st.rerun()
+    
     st.divider()
+    
+    # --- Sidebar ---
+    with st.sidebar:
+         st.header("Input Options")
+         file = st.file_uploader("📄 Upload CSV File", type="csv")
+         
+         run = st.button("🚀 Start Prediction & Screening", disabled=file is None, type="primary")
+         st.divider()
+        #  st.info(f"Fingerprint: Morgan (R={FP_RADIUS}, Bits={FP_BITS})\n\nSelector & Model loaded from: '{MODEL_DIR}'")
 
-    # --- Preview Visualisations ---
-    st.header("✨ Chart Preview for Report")
-    # Use tabs for better organization
-    tab_titles = [item[0] for item in viz_list]
-    tabs = st.tabs(tab_titles)
-    for i, (title, buf) in enumerate(viz_list):
-        with tabs[i]:
-           st.image(buf, caption=title, use_column_width=True)
+    col1, col2 = st.columns([3, 1])
 
-elif file is None and not 'top_df' in st.session_state :
-     st.info("👈 Please upload a CSV file and select options from the sidebar to start analysis.")
+    with col1:
+        # الـ slider
+        N_slider = st.slider(
+            "🔢 Number of Top Compounds for Report (Top-N)", 
+            min_value=1, 
+            max_value=500, 
+            value=10,
+            help="Choose the number of compounds with highest predicted activity scores"
+        )
+
+    with col2:
+        # الـ number input - سيتأثر بقيمة الـ slider
+        N_number = st.number_input(
+            "Exact Number",
+            min_value=1,
+            max_value=500,
+            value=N_slider,  # ربط بقيمة الـ slider
+            step=1
+        )
+
+    # استخدام القيمة من الـ number input (التي تتضمن تأثير الـ slider)
+    N = N_number
+    
+    # --- Main Logic ---
+    if run and file is not None:
+        # Use session state to keep results after run
+        st.session_state.run_pressed = True 
+        with st.spinner("Reading file and processing compounds..."):
+            try:
+               df_raw = pd.read_csv(file)
+            except Exception as e:
+                st.error(f"Error reading file: {e}")
+                st.stop()
+                
+            if "smiles" not in df_raw.columns:
+                st.error("❌ Error: CSV file must contain a column named 'smiles'.")
+                st.stop()
+            if df_raw.empty:
+                 st.error("❌ Error: CSV file is empty.")
+                 st.stop()
+                 
+            # Clean and process
+            smiles_series = df_raw["smiles"].dropna().drop_duplicates()
+            st.toast(f"Found {len(smiles_series)} unique SMILES")
+            X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
+
+            if X_raw is None:
+                st.error("❌ No valid SMILES compounds found in the file.")
+                st.stop()
+        
+        with st.spinner("Applying feature selection and making predictions..."):
+            # Apply selector and predict
+            try:
+               X_sel = SELECTOR.transform(X_raw)
+               if hasattr(MODEL, 'predict_proba'): # Scikit-learn
+                  probs = MODEL.predict_proba(X_sel)[:, 1]
+               else: # Keras / other
+                  probs = MODEL.predict(X_sel).ravel() # .ravel() flattens keras output
+                  
+            except Exception as e:
+                 st.error(f"An error occurred during prediction or feature selection: {e}")
+                 st.stop()
+
+            # Create full results DataFrame
+            results = pd.DataFrame({
+                "smiles": valid_smiles,
+                "probability": probs,
+                "Activity (%)": probs * 100,
+                "mol": mols_list,
+                 "fp_raw": list(X_raw) # keep raw FP for t-SNE
+                 })
+            results = pd.concat([results.reset_index(drop=True), properties_df.reset_index(drop=True)], axis=1)
+            
+            # Sort and select Top N
+            top_df = results.sort_values("probability", ascending=False).head(N).reset_index(drop=True)
+            top_df['rank'] = top_df['probability'].rank(ascending=False, method='min').astype(int)
+            top_df['Compound'] = [f'cpd_{i+1}' for i in range(len(top_df))]
+            
+            # Store in session state
+            st.session_state.top_df = top_df
+            st.session_state.fps_array_topN = np.array(top_df['fp_raw'].tolist())
+            st.session_state.N = N
+
+        st.success(f"✅ Processing completed. Report prepared for top {N} compounds.")
+
+    # --- Display Results if available in session state ---
+    if 'top_df' in st.session_state:
+        top_df = st.session_state.top_df
+        fps_array_topN = st.session_state.fps_array_topN
+        N_results = len(top_df) # Actual number retrieved
+
+        st.header(f"📊 Results for Top {N_results} Compounds")
+        # Define columns for display & CSV
+        display_cols = ['rank','Compound','smiles', 'Activity (%)', 'MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rotatable_Bonds', 'Drug_Like']
+        st.dataframe(top_df[display_cols].round(3), height=400, use_container_width=True)
+
+        # --- Generate Visuals and PDF ---
+        with st.spinner("Generating charts and PDF report..."):
+            viz_list = create_all_visualisations(top_df, fps_array_topN)
+            pdf_bytes = build_pdf(top_df, viz_list)
+        st.toast("PDF and Visuals Ready!")
+
+        # --- Download Buttons ---
+        col1, col2 = st.columns(2)
+        with col1:
+          st.download_button(
+            "⬇️ Download Results (CSV)",
+            data=top_df[display_cols].to_csv(index=False).encode('utf-8'),
+            file_name=f"top_{N_results}_compounds.csv",
+            mime="text/csv",
+            use_container_width=True
+          )
+        with col2:
+           st.download_button(
+            "⬇️ Download Comprehensive Report (PDF)",
+            data=pdf_bytes,
+            file_name=f"screening_report_top_{N_results}.pdf",
+            mime="application/pdf",
+             use_container_width=True
+           )
+        st.divider()
+
+        # --- Preview Visualisations ---
+        st.header("✨ Chart Preview for Report")
+        # Use tabs for better organization
+        tab_titles = [item[0] for item in viz_list]
+        tabs = st.tabs(tab_titles)
+        for i, (title, buf) in enumerate(viz_list):
+            with tabs[i]:
+               st.image(buf, caption=title, use_column_width=True)
+
+    elif file is None and not 'top_df' in st.session_state :
+         st.info("👈 Please upload a CSV file and select options from the sidebar to start analysis.")
+
+# --- Main App Logic ---
+# Initialize session state
+if 'show_main_app' not in st.session_state:
+    st.session_state.show_main_app = False
+
+# عرض الصفحة المناسبة
+if st.session_state.show_main_app:
+    show_main_app()
+else:
+    show_welcome_page()
+
