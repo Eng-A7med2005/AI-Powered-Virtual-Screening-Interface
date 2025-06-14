@@ -460,6 +460,11 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
 ################################################################################
 # Streamlit UI
 ################################################################################
+import streamlit as st
+import pandas as pd
+import numpy as np
+import base64
+
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
@@ -467,220 +472,530 @@ def set_background_with_fade(image_file):
     st.markdown(
         f"""
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         .stApp {{
-            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+            background: linear-gradient(135deg, rgba(16, 20, 31, 0.95), rgba(28, 37, 54, 0.92)),
                         url("data:image/png;base64,{encoded}");
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
+            font-family: 'Inter', sans-serif;
+        }}
+        
+        /* Custom CSS for animations and effects */
+        @keyframes fadeInUp {{
+            from {{
+                opacity: 0;
+                transform: translateY(30px);
+            }}
+            to {{
+                opacity: 1;
+                transform: translateY(0);
+            }}
+        }}
+        
+        @keyframes pulse {{
+            0% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.05); }}
+            100% {{ transform: scale(1); }}
+        }}
+        
+        @keyframes gradient {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        
+        .animate-fade-in {{
+            animation: fadeInUp 0.8s ease-out;
+        }}
+        
+        .pulse-hover:hover {{
+            animation: pulse 0.6s ease-in-out;
+        }}
+        
+        .gradient-text {{
+            background: linear-gradient(45deg, #00D4AA, #00A8CC, #0084FF);
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        
+        .glass-card {{
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }}
+        
+        .glass-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            border-color: rgba(0, 212, 170, 0.3);
+        }}
+        
+        .neon-border {{
+            border: 2px solid transparent;
+            border-radius: 20px;
+            background: linear-gradient(45deg, rgba(0, 212, 170, 0.3), rgba(0, 132, 255, 0.3)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: subtract;
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask-composite: subtract;
+        }}
+        
+        /* Custom button styles */
+        .stButton > button {{
+            background: linear-gradient(135deg, #00D4AA, #00A8CC);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0.8rem 2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.3);
+        }}
+        
+        .stButton > button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 212, 170, 0.4);
+            background: linear-gradient(135deg, #00E5BB, #00B8DD);
+        }}
+        
+        /* Enhanced sidebar */
+        .css-1d391kg {{
+            background: rgba(16, 20, 31, 0.9);
+            backdrop-filter: blur(20px);
+        }}
+        
+        /* Custom metric cards */
+        .metric-card {{
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(0, 132, 255, 0.1));
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }}
+        
+        .metric-card:hover {{
+            transform: scale(1.02);
+            border-color: rgba(0, 212, 170, 0.3);
+        }}
+        
+        /* Custom tabs */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        
+        .stTabs [aria-selected="true"] {{
+            background: linear-gradient(135deg, #00D4AA, #00A8CC);
+            border-color: rgba(0, 212, 170, 0.5);
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
-# إضافة صفحة الترحيب في بداية الكود
+
 def show_welcome_page():
-    """عرض صفحة الترحيب"""
+    """عرض صفحة الترحيب المحسنة"""
     
-    # تطبيق خلفية مشابهة للصفحة الرئيسية
     set_background_with_fade("Chemistry Wallpaper.jpg")
     
-    # العنوان الرئيسي
+    # Hero Section with enhanced design
     st.markdown("""
-    <div style="text-align: center; padding: 2rem 0;">
-        <h1 style="color: #00D4AA; font-size: 4rem; font-weight: bold; margin-bottom: 1rem;">
-            🧬 SmartVEGFR
-        </h1>
-        <h2 style="color: #ffffff; font-size: 1.8rem; font-weight: 300; margin-bottom: 2rem;">
-            Advanced VEGFR Inhibitor Screening Platform
-        </h2>
+    <div class="animate-fade-in" style="text-align: center; padding: 3rem 0 2rem 0;">
+        <div style="display: inline-block; position: relative;">
+            <h1 class="gradient-text" style="font-size: 5rem; font-weight: 700; margin: 0; letter-spacing: -2px;">
+                🧬 SmartVEGFR
+            </h1>
+            <div style="position: absolute; top: -10px; right: -20px; width: 20px; height: 20px; 
+                        background: linear-gradient(45deg, #00D4AA, #0084FF); border-radius: 50%; 
+                        box-shadow: 0 0 20px rgba(0, 212, 170, 0.6); animation: pulse 2s infinite;"></div>
+        </div>
+        <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.4rem; font-weight: 300; 
+                  margin-top: 1rem; letter-spacing: 1px;">
+            Advanced AI-Powered VEGFR Inhibitor Discovery Platform
+        </p>
+        <div style="width: 100px; height: 3px; background: linear-gradient(90deg, #00D4AA, #0084FF); 
+                    margin: 2rem auto; border-radius: 2px;"></div>
     </div>
     """, unsafe_allow_html=True)
     
-    # معلومات التطبيق
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Features Cards
+    col1, col2, col3 = st.columns([1, 3, 1])
     
     with col2:
+        # Main info card - تم إصلاح المشكلة هنا
         st.markdown("""
-        <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); 
-                    border-radius: 20px; padding: 2rem; margin: 2rem 0; 
-                    border: 1px solid rgba(255,255,255,0.2);">
+        <div class="glass-card animate-fade-in pulse-hover" style="padding: 3rem; margin: 2rem 0;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="display: inline-block; padding: 1rem; background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(0, 132, 255, 0.2)); 
+                           border-radius: 20px; margin-bottom: 1rem;">
+                    <span style="font-size: 3rem;">🎯</span>
+                </div>
+                <h2 style="color: #00D4AA; font-size: 2.2rem; font-weight: 600; margin: 0;">
+                    About SmartVEGFR
+                </h2>
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; line-height: 1.8; text-align: center; margin-bottom: 2rem;">
+                SmartVEGFR harnesses cutting-edge machine learning algorithms to predict VEGFR inhibitor activity 
+                with unprecedented accuracy. Transform your drug discovery workflow with AI-powered molecular screening.
+            </p>
+        </div>
         """, unsafe_allow_html=True)
         
+        # Feature cards grid
         st.markdown("""
-        ### 🎯 About SmartVEGFR
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin: 2rem 0;">
+            <div class="glass-card" style="padding: 2rem; text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">🤖</div>
+                <h3 style="color: #00D4AA; font-size: 1.3rem; margin-bottom: 0.5rem;">AI-Powered</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0;">
+                    Advanced ML models trained on extensive VEGFR data
+                </p>
+            </div>
+            <div class="glass-card" style="padding: 2rem; text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="color: #00A8CC; font-size: 1.3rem; margin-bottom: 0.5rem;">Comprehensive</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0;">
+                    Detailed molecular analysis and drug-likeness assessment
+                </p>
+            </div>
+            <div class="glass-card" style="padding: 2rem; text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📈</div>
+                <h3 style="color: #0084FF; font-size: 1.3rem; margin-bottom: 0.5rem;">Visual Reports</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0;">
+                    Interactive charts and professional PDF reports
+                </p>
+            </div>
+            <div class="glass-card" style="padding: 2rem; text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚡</div>
+                <h3 style="color: #00D4AA; font-size: 1.3rem; margin-bottom: 0.5rem;">High-Speed</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin: 0;">
+                    Rapid screening of large compound libraries
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        **SmartVEGFR** is an advanced machine learning platform designed for screening and predicting 
-        VEGFR (Vascular Endothelial Growth Factor Receptor) inhibitor activity of chemical compounds.
         
-        ### ✨ Key Features:
+        st.markdown("""
+        <div class="glass-card" style="padding: 1.2rem; margin: 1rem 0; text-align: center;">
+            <h3 style="color: #00D4AA; font-size: 1.8rem; margin-bottom: 1rem;">
+                🚀 How It Works
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.markdown("""
+            <div style="text-align: center; padding: 0.5rem; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00D4AA, #00A8CC); 
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                        margin-bottom: 0.8rem; font-size: 1.3rem; color: white; font-weight: bold;">1</div>
+                <h4 style="color: #00D4AA; margin-bottom: 0.3rem; font-size: 1rem;">Upload</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; margin: 0; line-height: 1.2;">
+                    CSV with SMILES
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("""
+            <div style="text-align: center; padding: 0.5rem; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #00A8CC, #0084FF); 
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                        margin-bottom: 0.8rem; font-size: 1.3rem; color: white; font-weight: bold;">2</div>
+                <h4 style="color: #00A8CC; margin-bottom: 0.3rem; font-size: 1rem;">Configure</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; margin: 0; line-height: 1.2;">
+                    Set parameters
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col3:
+            st.markdown("""
+            <div style="text-align: center; padding: 0.5rem; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0084FF, #6C5CE7); 
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                        margin-bottom: 0.8rem; font-size: 1.3rem; color: white; font-weight: bold;">3</div>
+                <h4 style="color: #0084FF; margin-bottom: 0.3rem; font-size: 1rem;">Analyze</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; margin: 0; line-height: 1.2;">
+                    AI prediction
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col4:
+            st.markdown("""
+            <div style="text-align: center; padding: 0.5rem; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #6C5CE7, #A29BFE); 
+                        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                        margin-bottom: 0.8rem; font-size: 1.3rem; color: white; font-weight: bold;">4</div>
+                <h4 style="color: #6C5CE7; margin-bottom: 0.3rem; font-size: 1rem;">Download</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; margin: 0; line-height: 1.2;">
+                    Results & reports
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
         
-        🔬 **AI-Powered Predictions**: Uses advanced machine learning models to predict VEGFR inhibitor activity
+        # CTA Button
+        st.markdown('<div style="text-align: center; margin: 3rem 0;">', unsafe_allow_html=True)
         
-        📊 **Comprehensive Analysis**: Provides detailed molecular properties and drug-likeness assessment
-        
-        📈 **Visual Reports**: Generates interactive charts and comprehensive PDF reports
-        
-        🧪 **Chemical Screening**: Efficiently screens large compound libraries for potential drug candidates
-        
-        ### 🚀 How It Works:
-        
-        1. **Upload** your compound library (CSV file with SMILES)
-        2. **Select** the number of top compounds for analysis
-        3. **Analyze** compounds using our trained ML models
-        4. **Download** results and comprehensive reports
-        
-        ### 📋 Technical Details:
-        
-        - **Molecular Fingerprints**: Morgan fingerprints for compound representation
-        - **Feature Selection**: Optimized feature selection for enhanced prediction accuracy
-        - **Molecular Properties**: MW, LogP, PSA, HBD, HBA, Rotatable Bonds, Drug-likeness
-        - **Visualization**: t-SNE plots, activity distributions, and molecular property analysis
-        """)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # زر البدء
-        st.markdown("<div style='text-align: center; margin: 3rem 0;'>", unsafe_allow_html=True)
-        
-        if st.button("🚀 Start SmartVEGFR Analysis", 
+        if st.button("🚀 Launch SmartVEGFR Platform", 
                     type="primary", 
                     use_container_width=True,
-                    help="Click to access the main application"):
+                    help="Access the main screening interface"):
             st.session_state.show_main_app = True
             st.rerun()
         
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        # معلومات إضافية
+        # Footer info
         st.markdown("""
-        <div style="background: rgba(0,212,170,0.1); border-radius: 10px; padding: 1rem; margin-top: 2rem;">
-            <p style="color: #00D4AA; text-align: center; margin: 0; font-size: 0.9rem;">
-                <strong>Note:</strong> This application uses pre-trained machine learning models. 
-                Results are for research purposes only.
+        <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem; text-align: center;">
+            <p style="color: rgba(0, 212, 170, 0.8); margin: 0; font-size: 0.95rem;">
+                <strong>⚠️ Research Use Only:</strong> This platform utilizes pre-trained ML models. 
+                Results are intended for research and educational purposes.
             </p>
         </div>
         """, unsafe_allow_html=True)
 
 def show_main_app():
-    """عرض التطبيق الرئيسي"""
+    """عرض التطبيق الرئيسي المحسن"""
     
-    st.title("🧬 SmartVEGFR")
+    set_background_with_fade("Chemistry Wallpaper.jpg")
+    
+    # Enhanced Header
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0 2rem 0;">
+        <h1 class="gradient-text" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            🧬 SmartVEGFR
+        </h1>
+        <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.1rem;">
+            AI-Powered VEGFR Inhibitor Screening Platform
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
+    # Model type name (you'll need to define this variable)
+    MODEL_TYPE_NAME = "Random Forest"  # Example - replace with your actual model name
+    
+    # Enhanced instructions card
     st.markdown(f"""
-    **Steps:**
-    1.  Upload a CSV file containing one column named `smiles`.
-    2.  Choose the number of top compounds (10-50) to display in the report.
-    3.  Click **"🚀 Start Prediction & Screening"**.
-    4.  Download results as CSV file and comprehensive PDF report.
-    *(Model Type: {MODEL_TYPE_NAME})*
-    """)
-
-    # استدعِ الدالة مع اسم الصورة
-    set_background_with_fade("Chemistry Wallpaper.jpg")  
+    <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+        <h3 style="color: #00D4AA; margin-bottom: 1rem; display: flex; align-items: center;">
+            <span style="margin-right: 0.5rem;">📋</span> Quick Start Guide
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+            <div class="metric-card">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📁</div>
+                <h4 style="color: #00D4AA; font-size: 0.9rem; margin: 0;">1. Upload CSV</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
+                    File with 'smiles' column
+                </p>
+            </div>
+            <div class="metric-card">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔢</div>
+                <h4 style="color: #00A8CC; font-size: 0.9rem; margin: 0;">2. Set Top-N</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
+                    Choose compounds (10-50)
+                </p>
+            </div>
+            <div class="metric-card">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚀</div>
+                <h4 style="color: #0084FF; font-size: 0.9rem; margin: 0;">3. Start Analysis</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
+                    Click predict button
+                </p>
+            </div>
+            <div class="metric-card">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📊</div>
+                <h4 style="color: #6C5CE7; font-size: 0.9rem; margin: 0;">4. Download</h4>
+                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
+                    CSV & PDF reports
+                </p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <small style="color: rgba(255, 255, 255, 0.6);">
+                Model: {MODEL_TYPE_NAME} | Morgan Fingerprints
+            </small>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # زر العودة للصفحة الرئيسية
-    if st.button("← Back to Welcome Page", help="Return to the welcome screen"):
-        st.session_state.show_main_app = False
-        st.rerun()
+    # Back button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("← Welcome Page", help="Return to welcome screen"):
+            st.session_state.show_main_app = False
+            st.rerun()
     
     st.divider()
     
-    # --- Sidebar ---
+    # Enhanced Sidebar
     with st.sidebar:
-         st.header("Input Options")
-         file = st.file_uploader("📄 Upload CSV File", type="csv")
-         
-         run = st.button("🚀 Start Prediction & Screening", disabled=file is None, type="primary")
-         st.divider()
-        #  st.info(f"Fingerprint: Morgan (R={FP_RADIUS}, Bits={FP_BITS})\n\nSelector & Model loaded from: '{MODEL_DIR}'")
+        st.markdown("""
+        <div class="glass-card" style="padding: 0.8rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; min-height: 80px;">
+            <h3 style="color: #00D4AA; margin: 0; text-align: center; font-size: 1.5rem;">
+                ⚙️Configuration
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        file = st.file_uploader("📄 Upload a CSV file containing a 'smiles' column", type="csv", help="Upload a CSV file containing a 'smiles' column")
+        
+        st.markdown("""
+        <style>
+        .stButton > button {
+            color: white !important;
+            font-weight: bold !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+        }
 
+        .stButton > button:hover {
+            color: #ffffff !important;
+        }
+
+        .stButton > button:disabled {
+            color: #CCCCCC !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        run = st.button("🚀 Start Prediction & Screening", 
+                        disabled=file is None, 
+                        type="primary",
+                        use_container_width=True)
+        
+        st.divider()
+        
+        # Model info card
+        st.markdown("""
+        <div class="glass-card" style="padding: 1rem;">
+            <h4 style="color: #00A8CC; margin-bottom: 0.5rem;">🔬 Model Info</h4>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin: 0;">
+                Morgan fingerprints with optimized feature selection for enhanced accuracy
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Enhanced slider section
+    st.markdown("""
+    <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+        <h3 style="color: #00D4AA; margin-bottom: 1.5rem; text-align: center;">
+            🔢 Select Number of Top Compounds
+        </h3>
+    """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns([3, 1])
 
     with col1:
-        # الـ slider
         N_slider = st.slider(
-            "🔢 Number of Top Compounds for Report (Top-N)", 
+            "Number of top compounds for detailed analysis", 
             min_value=1, 
             max_value=500, 
             value=10,
-            help="Choose the number of compounds with highest predicted activity scores"
+            help="Select compounds with highest predicted activity scores"
         )
 
     with col2:
-        # الـ number input - سيتأثر بقيمة الـ slider
         N_number = st.number_input(
             "Exact Number",
             min_value=1,
             max_value=500,
-            value=N_slider,  # ربط بقيمة الـ slider
+            value=N_slider,
             step=1
         )
 
-    # استخدام القيمة من الـ number input (التي تتضمن تأثير الـ slider)
     N = N_number
     
-    # --- Main Logic ---
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Placeholder for main logic - يجب إضافة باقي الكود هنا
     if run and file is not None:
         # Use session state to keep results after run
         st.session_state.run_pressed = True 
-        with st.spinner("Reading file and processing compounds..."):
-            try:
-               df_raw = pd.read_csv(file)
-            except Exception as e:
-                st.error(f"Error reading file: {e}")
-                st.stop()
-                
-            if "smiles" not in df_raw.columns:
-                st.error("❌ Error: CSV file must contain a column named 'smiles'.")
-                st.stop()
-            if df_raw.empty:
-                 st.error("❌ Error: CSV file is empty.")
-                 st.stop()
-                 
-            # Clean and process
-            smiles_series = df_raw["smiles"].dropna().drop_duplicates()
-            st.toast(f"Found {len(smiles_series)} unique SMILES")
-            X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
-
-            if X_raw is None:
-                st.error("❌ No valid SMILES compounds found in the file.")
-                st.stop()
         
-        with st.spinner("Applying feature selection and making predictions..."):
-            # Apply selector and predict
-            try:
-               X_sel = SELECTOR.transform(X_raw)
-               if hasattr(MODEL, 'predict_proba'): # Scikit-learn
-                  probs = MODEL.predict_proba(X_sel)[:, 1]
-               else: # Keras / other
-                  probs = MODEL.predict(X_sel).ravel() # .ravel() flattens keras output
-                  
-            except Exception as e:
-                 st.error(f"An error occurred during prediction or feature selection: {e}")
-                 st.stop()
+        try:
+            # Load data
+            with st.spinner("🔄 Loading and validating data..."):
+                df_raw = pd.read_csv(file)
+                
+                if "smiles" not in df_raw.columns:
+                    st.error("❌ Error: CSV file must contain a column named 'smiles'.")
+                    st.stop()
+                if df_raw.empty:
+                    st.error("❌ Error: CSV file is empty.")
+                    st.stop()
+                
+                st.success(f"✅ Data loaded: {len(df_raw)} compounds found")
+                
+            # Clean and process
+            with st.spinner("🧪 Processing molecular structures..."):
+                smiles_series = df_raw["smiles"].dropna().drop_duplicates()
+                st.toast(f"Found {len(smiles_series)} unique SMILES")
+                X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
 
-            # Create full results DataFrame
-            results = pd.DataFrame({
-                "smiles": valid_smiles,
-                "probability": probs,
-                "Activity (%)": probs * 100,
-                "mol": mols_list,
-                 "fp_raw": list(X_raw) # keep raw FP for t-SNE
-                 })
-            results = pd.concat([results.reset_index(drop=True), properties_df.reset_index(drop=True)], axis=1)
-            
-            # Sort and select Top N
-            top_df = results.sort_values("probability", ascending=False).head(N).reset_index(drop=True)
-            top_df['rank'] = top_df['probability'].rank(ascending=False, method='min').astype(int)
-            top_df['Compound'] = [f'cpd_{i+1}' for i in range(len(top_df))]
-            
-            # Store in session state
-            st.session_state.top_df = top_df
-            st.session_state.fps_array_topN = np.array(top_df['fp_raw'].tolist())
-            st.session_state.N = N
+                if X_raw is None:
+                    st.error("❌ No valid SMILES compounds found in the file.")
+                    st.stop()
+                
+                st.success(f"✅ Processed {len(valid_smiles)} valid molecules")
+        
+            # Make predictions
+            with st.spinner("🤖 Making AI predictions..."):
+                # Apply selector and predict
+                X_sel = SELECTOR.transform(X_raw)
+                if hasattr(MODEL, 'predict_proba'): # Scikit-learn
+                   probs = MODEL.predict_proba(X_sel)[:, 1]
+                else: # Keras / other
+                   probs = MODEL.predict(X_sel).ravel() # .ravel() flattens keras output
 
-        st.success(f"✅ Processing completed. Report prepared for top {N} compounds.")
+                # Create full results DataFrame
+                results = pd.DataFrame({
+                    "smiles": valid_smiles,
+                    "probability": probs,
+                    "Activity (%)": probs ,
+                    "mol": mols_list,
+                     "fp_raw": list(X_raw) # keep raw FP for t-SNE
+                     })
+                results = pd.concat([results.reset_index(drop=True), properties_df.reset_index(drop=True)], axis=1)
+                
+                # Sort and select Top N
+                top_df = results.sort_values("probability", ascending=False).head(N).reset_index(drop=True)
+                top_df['rank'] = top_df['probability'].rank(ascending=False, method='min').astype(int)
+                top_df['Compound'] = [f'cpd_{i+1}' for i in range(len(top_df))]
+                
+                # Store in session state
+                st.session_state.top_df = top_df
+                st.session_state.fps_array_topN = np.array(top_df['fp_raw'].tolist())
+                st.session_state.N = N
+            
+            st.success(f"🎯 Analysis complete! Found top {len(top_df)} compounds")
+
+        except Exception as e:
+            st.error(f"❌ Error during processing: {str(e)}")
+            st.stop()
 
     # --- Display Results if available in session state ---
     if 'top_df' in st.session_state:
@@ -688,51 +1003,174 @@ def show_main_app():
         fps_array_topN = st.session_state.fps_array_topN
         N_results = len(top_df) # Actual number retrieved
 
-        st.header(f"📊 Results for Top {N_results} Compounds")
-        # Define columns for display & CSV
-        display_cols = ['rank','Compound','smiles', 'Activity (%)', 'MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rotatable_Bonds', 'Drug_Like']
-        st.dataframe(top_df[display_cols].round(3), height=400, use_container_width=True)
-
-        # --- Generate Visuals and PDF ---
-        with st.spinner("Generating charts and PDF report..."):
-            viz_list = create_all_visualisations(top_df, fps_array_topN)
-            pdf_bytes = build_pdf(top_df, viz_list)
-        st.toast("PDF and Visuals Ready!")
-
-        # --- Download Buttons ---
-        col1, col2 = st.columns(2)
+        # Results summary with enhanced UI
+        st.markdown("""
+        <div class="glass-card" style="padding: 2rem; margin: 2rem 0;">
+            <h2 style="color: #00D4AA; text-align: center; margin-bottom: 1.5rem;">
+                🎯 Screening Results Summary
+            </h2>
+        """, unsafe_allow_html=True)
+        
+        # Summary metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
-          st.download_button(
-            "⬇️ Download Results (CSV)",
-            data=top_df[display_cols].to_csv(index=False).encode('utf-8'),
-            file_name=f"top_{N_results}_compounds.csv",
-            mime="text/csv",
-            use_container_width=True
-          )
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #00D4AA; font-size: 2rem; margin-bottom: 0.5rem;">
+                    {N_results}
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Top Compounds</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         with col2:
-           st.download_button(
-            "⬇️ Download Comprehensive Report (PDF)",
-            data=pdf_bytes,
-            file_name=f"screening_report_top_{N_results}.pdf",
-            mime="application/pdf",
-             use_container_width=True
-           )
-        st.divider()
+            avg_activity = top_df['Activity (%)'].mean()*100
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #00A8CC; font-size: 2rem; margin-bottom: 0.5rem;">
+                    {avg_activity:.1f}%
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Avg Activity</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            drug_like_count = top_df['Drug_Like'].sum()
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #0084FF; font-size: 2rem; margin-bottom: 0.5rem;">
+                    {drug_like_count}
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Drug-Like</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            max_activity = top_df['Activity (%)'].max()
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3 style="color: #6C5CE7; font-size: 2rem; margin-bottom: 0.5rem;">
+                    {max_activity:.1f}%
+                </h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin: 0;">Best Hit</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # --- Preview Visualisations ---
-        st.header("✨ Chart Preview for Report")
-        # Use tabs for better organization
-        tab_titles = [item[0] for item in viz_list]
-        tabs = st.tabs(tab_titles)
-        for i, (title, buf) in enumerate(viz_list):
-            with tabs[i]:
-               st.image(buf, caption=title, use_column_width=True)
+        # Results tabs with enhanced design
+        tab1, tab2, tab3 = st.tabs(["📊 Interactive Results", "📈 Visualizations", "📄 Download Reports"])
+        
+        with tab1:
+            st.markdown("""
+            <div class="glass-card" style="padding: 1.5rem; margin: 1rem 0;">
+                <h3 style="color: #00D4AA; margin-bottom: 1rem;">
+                    🏆 Top Predicted VEGFR Inhibitors
+                </h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Display top compounds table with enhanced formatting
+            display_cols = ['rank','smiles', 'Activity (%)','Drug_Like', 'MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rotatable_Bonds']
+            display_df = top_df[display_cols].round(3).copy()
+            display_df.columns = ['Rank', 'SMILES', 'Activity (%)', 'Drug-Like', 'MW', 'LogP', 'PSA', 'HBD', 'HBA', 'Rot. Bonds']
+            
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Activity (%)": st.column_config.ProgressColumn(
+                        "Activity (%)",
+                        help="Predicted VEGFR inhibition activity",
+                        min_value=0,
+                        max_value=1,
+                    ),
+                    "SMILES": st.column_config.TextColumn(
+                        "SMILES",
+                        help="Molecular structure in SMILES format",
+                        max_chars=100,
+                    ),
+                }
+            )
 
-    elif file is None and not 'top_df' in st.session_state :
-         st.info("👈 Please upload a CSV file and select options from the sidebar to start analysis.")
+        with tab2:
+            st.markdown("""
+            <div class="glass-card" style="padding: 1.5rem; margin: 1rem 0;">
+                <h3 style="color: #00D4AA; margin-bottom: 1rem;">
+                    📈 Analysis Visualizations
+                </h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # --- Generate Visuals and PDF ---
+            with st.spinner("🎨 Generating visualizations..."):
+                viz_list = create_all_visualisations(top_df, fps_array_topN)
+            st.toast("Visualizations Ready!")
 
-# --- Main App Logic ---
-# Initialize session state
+            # --- Preview Visualisations ---
+            # Use tabs for better organization
+            tab_titles = [item[0] for item in viz_list]
+            viz_tabs = st.tabs(tab_titles)
+            for i, (title, buf) in enumerate(viz_list):
+                with viz_tabs[i]:
+                   st.image(buf, caption=title, use_column_width=True)
+
+        with tab3:
+            st.markdown("""
+            <div class="glass-card" style="padding: 1.5rem; margin: 1rem 0;">
+                <h3 style="color: #00D4AA; margin-bottom: 1rem;">
+                    📥 Download Analysis Reports
+                </h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Generate PDF
+            with st.spinner("📄 Generating PDF report..."):
+                if 'viz_list' not in locals():
+                    viz_list = create_all_visualisations(top_df, fps_array_topN)
+                pdf_bytes = build_pdf(top_df, viz_list)
+
+            # --- Download Buttons ---
+            col1, col2 = st.columns(2)
+            with col1:
+              st.download_button(
+                "📊 Download Results (CSV)",
+                data=top_df[display_cols].to_csv(index=False).encode('utf-8'),
+                file_name=f"top_{N_results}_compounds.csv",
+                mime="text/csv",
+                use_container_width=True
+              )
+            with col2:
+               st.download_button(
+                "📄 Download Comprehensive Report (PDF)",
+                data=pdf_bytes,
+                file_name=f"screening_report_top_{N_results}.pdf",
+                mime="application/pdf",
+                 use_container_width=True
+               )
+            
+            # Clear results button
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🔄 Clear Results & Start New Analysis", type="secondary"):
+                for key in ['top_df', 'fps_array_topN', 'N', 'run_pressed']:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+
+    elif file is None and not 'top_df' in st.session_state:
+        st.markdown("""
+        <div class="glass-card" style="padding: 3rem; text-align: center; margin: 2rem 0;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📁</div>
+            <h3 style="color: #00D4AA; margin-bottom: 1rem;">Ready to Begin Analysis</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 1.1rem;">
+                Upload your CSV file with SMILES data to start the AI-powered screening process
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# Main App Logic
 if 'show_main_app' not in st.session_state:
     st.session_state.show_main_app = False
 
@@ -741,4 +1179,3 @@ if st.session_state.show_main_app:
     show_main_app()
 else:
     show_welcome_page()
-
