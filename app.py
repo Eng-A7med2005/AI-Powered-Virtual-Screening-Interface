@@ -498,28 +498,7 @@ set_background_with_fade("Chemistry Wallpaper.jpg")
 with st.sidebar:
      st.header("Input Options")
      file = st.file_uploader("📄 Upload CSV File", type="csv")
-     def set_background_with_fade(image_file):
-         with open(image_file, "rb") as image:
-             encoded = base64.b64encode(image.read()).decode()
-         st.markdown(
-         f"""
-         <style>
-         .stApp {{
-             background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-                         url("data:image/png;base64,{encoded}");
-             background-size: cover;
-             background-attachment: fixed;
-             background-position: center;
-         }}
-         </style>
-         """,
-         unsafe_allow_html=True
-     )
-    
-
-
-# استدعِ الدالة مع اسم الصورة
-    set_background_with_fade("Chemistry Wallpaper.jpg")
+     
      run = st.button("🚀 Start Prediction & Screening", disabled=file is None, type="primary")
      st.divider()
      st.info(f"Fingerprint: Morgan (R={FP_RADIUS}, Bits={FP_BITS})\n\nSelector & Model loaded from: '{MODEL_DIR}'")
