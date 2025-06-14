@@ -1047,7 +1047,7 @@ def show_main_app():
             """, unsafe_allow_html=True)
         
         with col4:
-            max_activity = top_df['Activity (%)'].max()
+            max_activity = top_df['Activity (%)'].max()*100
             st.markdown(f"""
             <div class="metric-card">
                 <h3 style="color: #6C5CE7; font-size: 2rem; margin-bottom: 0.5rem;">
