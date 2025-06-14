@@ -953,7 +953,7 @@ def show_main_app():
             # Clean and process
             with st.spinner("🧪 Processing molecular structures..."):
                 smiles_series = df_raw["smiles"].dropna().drop_duplicates()
-                st.toast(f"Found {len(smiles_series)} unique SMILES")
+                #st.toast(f"Found {len(smiles_series)} unique SMILES")
                 X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
 
                 if X_raw is None:
