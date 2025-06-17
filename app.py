@@ -463,7 +463,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import base64
-full_hide_css = """
+hide_everything_css = """
 <style>
 /* إخفاء القائمة الجانبية */
 #MainMenu {visibility: hidden;}
@@ -475,8 +475,13 @@ footer:after {content:'';}
 /* إخفاء الهيدر القديم */
 header {visibility: hidden;}
 
-/* إخفاء الهيدر الجديد بكلاس الـ Emotion */
+/* إخفاء الهيدر الجديد */
 .st-emotion-cache-h4xjwg {
+    display: none !important;
+}
+
+/* إخفاء صورة البروفايل */
+._profileImage_gzau3_78._darkThemeShadow_gzau3_91 {
     display: none !important;
 }
 
@@ -485,13 +490,13 @@ header {visibility: hidden;}
     display: none !important;
 }
 
-/* إخفاء البادج الخاص بالمشاهد */
-._container_gzau3_1._viewerBadge_nim44_23 {
+/* إخفاء معاينة البروفايل */
+._profilePreview_gzau3_63 {
     display: none !important;
 }
 
-/* إخفاء صورة البروفايل بظل */
-._profileImage_gzau3_78._darkThemeShadow_gzau3_91 {
+/* إخفاء البادج الخاص بالمشاهد */
+._container_gzau3_1._viewerBadge_nim44_23 {
     display: none !important;
 }
 
@@ -507,7 +512,7 @@ header {visibility: hidden;}
 </style>
 """
 
-st.markdown(full_hide_css, unsafe_allow_html=True)
+st.markdown(hide_everything_css, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
