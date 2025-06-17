@@ -465,42 +465,51 @@ import numpy as np
 import base64
 import streamlit as st
 
+import streamlit as st
+
 hide_all_ui_css = """
 <style>
 /* إخفاء القائمة الجانبية */
-#MainMenu {visibility: hidden;}
+#MainMenu {
+    visibility: hidden;
+}
 
 /* إخفاء الفوتر */
-footer {visibility: hidden;}
-footer:after {content:'';}
+footer {
+    visibility: hidden;
+}
+footer:after {
+    content: '';
+}
 
 /* إخفاء الهيدر القديم */
-header {visibility: hidden;}
+header {
+    visibility: hidden;
+}
 
-/* إخفاء الهيدر الجديد (emotion class) */
+/* إخفاء الهيدر الجديد (Streamlit Cloud header) */
 .st-emotion-cache-h4xjwg {
     display: none !important;
 }
 
-/* إخفاء العناصر الديناميكية المرتبطة بالبروفايل واللينك والبادج */
-div[class*="_profileContainer"] {
+/* إخفاء كل مكونات البروفايل والصورة واللينك والبادج */
+/* باستخدام partial match عشان الكلاسات بتتولد عشوائي */
+div[class*="profileContainer"],
+div[class*="profileImage"],
+div[class*="profilePreview"],
+div[class*="viewerBadge"],
+div[class*="container"] div[class*="viewerBadge"],
+a[class*="_link_"],
+a[href*="github"],
+a[href*="streamlit.io"],
+img[src*="avatars.githubusercontent.com"],
+img[src*="githubusercontent.com"] {
     display: none !important;
-}
-
-div[class*="_profileImage"] {
-    display: none !important;
-}
-
-div[class*="_profilePreview"] {
-    display: none !important;
-}
-
-div[class*="viewerBadge"] {
-    display: none !important;
-}
-
-a[class*="_link_"] {
-    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 </style>
 """
