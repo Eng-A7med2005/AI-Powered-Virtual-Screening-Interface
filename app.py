@@ -464,12 +464,12 @@ import pandas as pd
 import numpy as np
 import base64
 hide_menu_style = """
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        </style>
-        """
+    <style>
+    #MainMenu {display: none;}
+    footer {display: none;}
+    header {display: none;}
+    </style>
+    """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
