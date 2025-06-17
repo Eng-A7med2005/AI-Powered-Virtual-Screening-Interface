@@ -503,9 +503,7 @@ a[href*="github.com"] {
 }
 </style>
 """
-
 st.markdown(hide_profile_section, unsafe_allow_html=True)
-st.markdown(hide_all_ui_css, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
