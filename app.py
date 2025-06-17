@@ -460,50 +460,55 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
 # Streamlit UI
 ################################################################################
 import streamlit as st
-import pandas as pd
-import numpy as np
-import base64
-import streamlit as st
 
-import streamlit as st
-
-import streamlit as st
-
-hide_profile_section = """
+hide_all_ui_css = """
 <style>
-/* إخفاء حاوية البروفايل */
-div[class*="_profileContainer"] {
-    display: none !important;
-    visibility: hidden !important;
+/* إخفاء القائمة الجانبية */
+#MainMenu {
+    visibility: hidden;
 }
 
-/* إخفاء معاينة البروفايل */
-div[class*="_profilePreview"] {
-    display: none !important;
-    visibility: hidden !important;
+/* إخفاء الفوتر */
+footer {
+    visibility: hidden;
+}
+footer:after {
+    content: '';
 }
 
-/* إخفاء رابط الستريملت */
-a[href*="share.streamlit.io"] {
-    display: none !important;
-    visibility: hidden !important;
+/* إخفاء الهيدر القديم */
+header {
+    visibility: hidden;
 }
 
-/* إخفاء صورة البروفايل */
+/* إخفاء الهيدر الجديد (Streamlit Cloud header) */
+.st-emotion-cache-h4xjwg {
+    display: none !important;
+}
+
+/* إخفاء كل مكونات البروفايل والصورة واللينك والبادج */
+/* باستخدام partial match عشان الكلاسات بتتولد عشوائي */
+div[class*="profileContainer"],
+div[class*="profileImage"],
+div[class*="profilePreview"],
+div[class*="viewerBadge"],
+div[class*="container"] div[class*="viewerBadge"],
+a[class*="_link_"],
+a[href*="github"],
+a[href*="streamlit.io"],
+img[src*="avatars.githubusercontent.com"],
 img[src*="githubusercontent.com"] {
     display: none !important;
     visibility: hidden !important;
-}
-
-/* إخفاء أي لينك متعلق بـ streamlit أو git */
-a[href*="streamlit.io"],
-a[href*="github.com"] {
-    display: none !important;
-    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 </style>
 """
-st.markdown(hide_profile_section, unsafe_allow_html=True)
+
+st.markdown(hide_all_ui_css, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
