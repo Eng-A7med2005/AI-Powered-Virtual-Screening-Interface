@@ -463,14 +463,25 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import base64
-hide_menu_style = """
+hide_all_ui = """
     <style>
-    #MainMenu {display: none;}
-    footer {display: none;}
-    header {display: none;}
+    /* إخفاء القائمة الجانبية */
+    #MainMenu {visibility: hidden;}
+
+    /* إخفاء الفوتر */
+    footer {visibility: hidden;}
+    footer:after {content:'';}
+
+    /* إخفاء الهيدر القديم */
+    header {visibility: hidden;}
+
+    /* إخفاء الهيدر الجديد بكلاس الـ Emotion */
+    .st-emotion-cache-h4xjwg {
+        display: none !important;
+    }
     </style>
-    """
-st.markdown(hide_menu_style, unsafe_allow_html=True)
+"""
+st.markdown(hide_all_ui, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
