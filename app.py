@@ -484,13 +484,12 @@ hide_all_ui = """
 st.markdown(hide_all_ui, unsafe_allow_html=True)
 custom_hide_css = """
     <style>
-    /* إخفاء عناصر محددة بالكلاس */
+    /* إخفاء الحاوية الخاصة بالبروفايل */
     ._profileContainer_gzau3_53 {
         display: none !important;
     }
-    ._profilePreview_gzau3_63 {
-        display: none !important;
-    }
+
+    /* إخفاء العنصر اللي فيه كلاسين مع بعض */
     ._container_gzau3_1._viewerBadge_nim44_23 {
         display: none !important;
     }
