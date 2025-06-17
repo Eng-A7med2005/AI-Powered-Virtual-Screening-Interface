@@ -481,16 +481,30 @@ hide_all_ui = """
     }
     </style>
 """
-st.markdown(hide_all_ui, unsafe_allow_html=True)
 custom_hide_css = """
     <style>
-    /* إخفاء الحاوية الخاصة بالبروفايل */
+    /* إخفاء حاوية البروفايل */
     ._profileContainer_gzau3_53 {
         display: none !important;
     }
 
-    /* إخفاء العنصر اللي فيه كلاسين مع بعض */
+    /* إخفاء البادج الخاص بالمشاهد */
     ._container_gzau3_1._viewerBadge_nim44_23 {
+        display: none !important;
+    }
+
+    /* إخفاء صورة البروفايل بظل */
+    ._profileImage_gzau3_78._darkThemeShadow_gzau3_91 {
+        display: none !important;
+    }
+
+    /* إخفاء الرابط */
+    ._link_gzau3_10 {
+        display: none !important;
+    }
+
+    /* إخفاء العنصر المكرر (لو ظهر مرتين بنفس الكلاسات) */
+    ._container_gzau3_1._viewerBadge_nim44_23._container_gzau3_1._viewerBadge_nim44_23 {
         display: none !important;
     }
     </style>
