@@ -482,6 +482,21 @@ hide_all_ui = """
     </style>
 """
 st.markdown(hide_all_ui, unsafe_allow_html=True)
+custom_hide_css = """
+    <style>
+    /* إخفاء عناصر محددة بالكلاس */
+    ._profileContainer_gzau3_53 {
+        display: none !important;
+    }
+    ._profilePreview_gzau3_63 {
+        display: none !important;
+    }
+    ._container_gzau3_1._viewerBadge_nim44_23 {
+        display: none !important;
+    }
+    </style>
+"""
+st.markdown(custom_hide_css, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
