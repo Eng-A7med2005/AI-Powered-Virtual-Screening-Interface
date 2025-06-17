@@ -456,7 +456,6 @@ def build_pdf(df: pd.DataFrame, viz_list: list[tuple]) -> bytes:
         pdf_buffer.write(pdf_bytes)
         pdf_buffer.seek(0)
         return pdf_buffer.getvalue()
-
 ################################################################################
 # Streamlit UI
 ################################################################################
@@ -464,7 +463,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import base64
-
+hide_menu_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+        """
+st.markdown(hide_menu_style, unsafe_allow_html=True)
 def set_background_with_fade(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
@@ -475,7 +481,7 @@ def set_background_with_fade(image_file):
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         .stApp {{
-            background: linear-gradient(135deg, rgba(16, 20, 31, 0.95), rgba(28, 37, 54, 0.92)),
+            background: linear-gradient(135deg, rgba(16, 20, 31, 0.65), rgba(28, 37, 54, 0.65)),
                         url("data:image/png;base64,{encoded}");
             background-size: cover;
             background-attachment: fixed;
@@ -614,14 +620,14 @@ def set_background_with_fade(image_file):
 def show_welcome_page():
     """عرض صفحة الترحيب المحسنة"""
     
-    set_background_with_fade("Chemistry Wallpaper.jpg")
+    set_background_with_fade("Chemistry Wallpaper2.jpg")
     
     # Hero Section with enhanced design
     st.markdown("""
     <div class="animate-fade-in" style="text-align: center; padding: 3rem 0 2rem 0;">
         <div style="display: inline-block; position: relative;">
-            <h1 class="gradient-text" style="font-size: 5rem; font-weight: 700; margin: 0; letter-spacing: -2px;">
-                🧬 SmartVEGFR
+            <h1 style="font-size: 5rem; font-weight: 700; margin: 0; letter-spacing: -2px;">
+                <span class="gradient-text">Smart</span><span style="color: #DDDDDD;">VEGFR</span>
             </h1>
             <div style="position: absolute; top: -10px; right: -20px; width: 20px; height: 20px; 
                         background: linear-gradient(45deg, #00D4AA, #0084FF); border-radius: 50%; 
@@ -782,13 +788,13 @@ def show_welcome_page():
 def show_main_app():
     """عرض التطبيق الرئيسي المحسن"""
     
-    set_background_with_fade("Chemistry Wallpaper.jpg")
+    set_background_with_fade("Chemistry Wallpaper2.jpg")
     
     # Enhanced Header
     st.markdown("""
     <div style="text-align: center; padding: 1rem 0 2rem 0;">
-        <h1 class="gradient-text" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.5rem;">
-            🧬 SmartVEGFR
+        <h1 style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            <span class="gradient-text">Smart</span><span style="color: #DDDDDD;">VEGFR</span>
         </h1>
         <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.1rem;">
             AI-Powered VEGFR Inhibitor Screening Platform
@@ -953,7 +959,7 @@ def show_main_app():
             # Clean and process
             with st.spinner("🧪 Processing molecular structures..."):
                 smiles_series = df_raw["smiles"].dropna().drop_duplicates()
-                #st.toast(f"Found {len(smiles_series)} unique SMILES")
+                # st.toast(f"Found {len(smiles_series)} unique SMILES")
                 X_raw, mols_list, valid_smiles, properties_df = process_smiles(smiles_series.tolist())
 
                 if X_raw is None:
